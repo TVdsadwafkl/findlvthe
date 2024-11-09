@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    #video {
+      width: 640px;
+      height: 480px;
+    }
+
+    #canvas {
+      display: none;
+    }
+
+    #image {
+      display: none;
+    }
+
+    #output {
+      font-size: 3em;
+      color: green;
+    }
+  </style>
+</head>
+
+<body>
+
+  <video id="video" width="640" height="480" autoplay></video>
+  <canvas id="canvas" width="640" height="480"></canvas>
+  <div id="output"></div>
+  <img id="image" src="https://s2.loli.net/2024/11/07/GiZ7t2kJua4BIPQ.png" alt="指定图片">
+
+  <script>
+    // 检查是否支持 getUserMedia
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      // 申请摄像头权限
+      navigator.mediaDevices.getUserMedia({
+        video: true
+      })
+    .then(function (stream) {
+        var video = document.getElementById('video');
+        video.srcObject = stream;
+
+        // 每秒处理一次帧
+        setInterval(processFrame, 1000);
+      })
+    .catch(function (err) {
+        console.error("无法获取摄像头: " + err);
+      });
+    } else {
+      console.error("浏览器不支持 getUserMedia API");
+    }
+
+    function processFrame() {
+      var video = document.getElementById('video');
+      var canvas = document.getElementById('canvas');
+      var ctx = canvas.getContext('2d');
+      var outputDiv = document.getElementById('output');
+      var image = document.getElementById('image');
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      var data = imageData.data;
+      var foundGreen = false;
+
+      for (var y = 0; y < canvas.height; y++) {
+        for (var x = 0; x < canvas.width; x++) {
+          var index = (y * canvas.width + x) * 4;
+
+          var r = data[index];
+          var g = data[index + 1];
+          var b = data[index + 2];
+
+          // 调整绿色检测阈值，增强灵敏度
+          if (g > 150 && r < 100 && b < 100) {
+            foundGreen = true;
+            break;
+          }
+        }
+        if (foundGreen) {
+          break;
+        }
+      }
+
+      if (foundGreen) {
+        outputDiv.innerHTML = '绿泽出没！';
+        image.style.display = 'block';
+      } else {
+        outputDiv.innerHTML = '';
+        image.style.display = 'none';
+      }
+    }
+  </script>
+
+</body>
+
+</html>
